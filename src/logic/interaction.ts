@@ -759,73 +759,80 @@ export function setupPieceInteraction({
     'pointerdown',
     event => {
       // we just handle left-click interactions
-      if (event.button !== 0 || !interactionEnabled) {
+      if (!interactionEnabled) {
         return;
       }
-
-      const piece = getPieceUnderPointer(event);
-      if (!piece) {
-        if (selectedPiece) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        return;
-      }
-
-      if (!canInteractWithPiece(piece)) {
-        return;
-      }
-
-      if (!draggable) {
-        event.stopPropagation();
-        clickState = {
-          pointerId: event.pointerId,
-          startClientX: event.clientX,
-          startClientY: event.clientY,
-        };
-        return;
-      }
-
-      // If a piece is pinned, clicking another piece should act as a click target,
-      // not start a drag on the clicked piece.
-      if (selectedPiece && piece !== selectedPiece) {
-        event.stopPropagation();
-
-        if (isOppositeColor(selectedPiece, piece)) {
-          const targetX = piece.position.x;
-          const targetZ = piece.position.z;
-          if (attemptInteractionMove(selectedPiece, targetX, targetZ)) {
-            clearSelection();
-            return;
-          }
-        }
-
-        selectPiece(piece);
-        return;
-      }
-
-      event.stopPropagation();
 
       pointerRaycaster.setFromCamera(pointerNdcFromEvent(event, pointerNdc), camera);
       const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
-      const pointerOffsetX = hasBoardIntersection ? piece.position.x - boardPoint.x : 0;
-      const pointerOffsetZ = hasBoardIntersection ? piece.position.z - boardPoint.z : 0;
 
-      dragState = {
-        piece,
-        pointerId: event.pointerId,
-        startPosition: piece.position.clone(),
-        startClientX: event.clientX,
-        startClientY: event.clientY,
-        pointerOffsetX,
-        pointerOffsetZ,
-        hasMoved: false,
-      };
-      controls.enabled = false;
-      hoverController.setPinnedPiece(piece);
-      hoverController.setIgnoredPiece(piece);
-      hoverController.updateFromPointerEvent(event);
-      renderer.domElement.setPointerCapture(event.pointerId);
+      if (event.button === 2) {
+        if (hasBoardIntersection && isWithinBoard(boardPoint.x, boardPoint.z)) {
+          event.stopPropagation();
+        }
+      }
+      if (event.button === 0) {
+        const piece = getPieceUnderPointer(event);
+        if (!piece) {
+          if (selectedPiece) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          return;
+        }
+
+        if (!canInteractWithPiece(piece)) {
+          return;
+        }
+
+        if (!draggable) {
+          event.stopPropagation();
+          clickState = {
+            pointerId: event.pointerId,
+            startClientX: event.clientX,
+            startClientY: event.clientY,
+          };
+          return;
+        }
+
+        // If a piece is pinned, clicking another piece should act as a click target,
+        // not start a drag on the clicked piece.
+        if (selectedPiece && piece !== selectedPiece) {
+          event.stopPropagation();
+
+          if (isOppositeColor(selectedPiece, piece)) {
+            const targetX = piece.position.x;
+            const targetZ = piece.position.z;
+            if (attemptInteractionMove(selectedPiece, targetX, targetZ)) {
+              clearSelection();
+              return;
+            }
+          }
+
+          selectPiece(piece);
+          return;
+        }
+
+        event.stopPropagation();
+        const pointerOffsetX = hasBoardIntersection ? piece.position.x - boardPoint.x : 0;
+        const pointerOffsetZ = hasBoardIntersection ? piece.position.z - boardPoint.z : 0;
+
+        dragState = {
+          piece,
+          pointerId: event.pointerId,
+          startPosition: piece.position.clone(),
+          startClientX: event.clientX,
+          startClientY: event.clientY,
+          pointerOffsetX,
+          pointerOffsetZ,
+          hasMoved: false,
+        };
+        controls.enabled = false;
+        hoverController.setPinnedPiece(piece);
+        hoverController.setIgnoredPiece(piece);
+        hoverController.updateFromPointerEvent(event);
+        renderer.domElement.setPointerCapture(event.pointerId);
+      }
     },
     { capture: true },
   );
