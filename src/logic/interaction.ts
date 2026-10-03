@@ -97,8 +97,6 @@ export function setupPieceInteraction({
   let dragState: DragState | null = null;
   let clickState: ClickState | null = null;
   let selectedPiece: THREE.Mesh | null = null;
-  let activeMouseButton: number | null = null;
-  let hoverDisabledForOrbit = false;
   let onMoveAttempt: ((uci: string) => boolean) | undefined = undefined;
   let onMove: ((from: string, to: string, isPremove: boolean) => void) | undefined = undefined;
   let allowWhiteInteraction = initialAllowWhiteInteraction;
@@ -909,46 +907,11 @@ export function setupPieceInteraction({
     finishDrag(event);
   });
 
-  renderer.domElement.addEventListener('pointerdown', event => {
-    activeMouseButton = event.pointerType === 'mouse' ? event.button : null;
-  });
-
-  renderer.domElement.addEventListener('pointerup', () => {
-    activeMouseButton = null;
-  });
-
-  renderer.domElement.addEventListener('pointercancel', () => {
-    activeMouseButton = null;
-  });
-
   // right-click cancels a queued premove, mirroring lichess's board behavior
   renderer.domElement.addEventListener('contextmenu', event => {
     event.preventDefault();
     if (interactionEnabled) {
       cancelQueuedPremove();
-    }
-  });
-
-  controls.addEventListener('start', () => {
-    if (!interactionEnabled) {
-      return;
-    }
-
-    if (activeMouseButton === 0) {
-      hoverController.setEnabled(false);
-      hoverDisabledForOrbit = true;
-    }
-  });
-
-  controls.addEventListener('end', () => {
-    activeMouseButton = null;
-    if (!interactionEnabled) {
-      return;
-    }
-
-    if (hoverDisabledForOrbit) {
-      hoverController.setEnabled(true);
-      hoverDisabledForOrbit = false;
     }
   });
 
