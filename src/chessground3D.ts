@@ -1,3 +1,4 @@
+import { Chessground as Chessground2D } from '@lichess-org/chessground';
 import { type Api } from '@lichess-org/chessground/api';
 import { type Config, configure } from '@lichess-org/chessground/config';
 import { defaults, type HeadlessState, type State } from '@lichess-org/chessground/state';
@@ -7,6 +8,10 @@ import { opposite } from '@lichess-org/chessground/util';
 import { createChessScene } from './chessScene';
 
 export function Chessground(element: HTMLElement, config?: Config): Api {
+  if (new URLSearchParams(window.location.search).get('2D')) {
+    return Chessground2D(element, config);
+  }
+
   function notImplemented(name: string): () => void;
   function notImplemented<T>(name: string, returnValue: T): () => T;
   function notImplemented<T>(name: string, returnValue?: T) {
