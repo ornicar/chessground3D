@@ -773,6 +773,10 @@ export function setupPieceInteraction({
         return;
       }
 
+      if (drawEnabled) {
+        event.stopPropagation();
+      }
+
       pointerRaycaster.setFromCamera(pointerNdcFromEvent(event, pointerNdc), camera);
       const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
 
@@ -785,7 +789,6 @@ export function setupPieceInteraction({
             toX: getSquareCoordinate(boardPoint.x),
             toY: getSquareCoordinate(boardPoint.z),
           };
-          event.stopPropagation();
           console.log('Draw started', drawState);
         }
       }
