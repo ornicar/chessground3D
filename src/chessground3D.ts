@@ -82,7 +82,7 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
     stop: notImplemented('stop'),
     explode: notImplemented('explode'),
     setShapes(shapes) {
-      scene.setAutoShapes(shapes);
+      scene.setShapes(shapes);
     },
     setAutoShapes(shapes) {
       scene.setAutoShapes(shapes);

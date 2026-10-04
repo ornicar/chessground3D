@@ -31,6 +31,7 @@ export interface ChessScene {
   move(from: Key, to: Key): void;
   selectSquare(key: Key | null): void;
   setAutoShapes(shapes: DrawShape[]): void;
+  setShapes(shapes: DrawShape[]): void;
   getFen(): string;
   getKeyAtDomPos(pos: [number, number]): Key | undefined;
   dragNewPiece(piece: Piece, event: MouchEvent, force?: boolean): () => void;
@@ -54,10 +55,12 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
   const h8Marker = createH8Marker();
   const checkHighlight = createCheckHighlightMarker();
   const autoShapesGroup = new THREE.Group();
+  const shapesGroup = new THREE.Group();
   scene.add(a1Marker);
   scene.add(h8Marker);
   scene.add(checkHighlight);
   scene.add(autoShapesGroup);
+  scene.add(shapesGroup);
   const stopHandlingResize = handleResize(sceneRoot, camera, renderer);
 
   let materialTemplates = new Map<string, THREE.Material>();
@@ -218,6 +221,10 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
 
     setAutoShapes(shapes) {
       updateAutoShapes(autoShapesGroup, shapes, state.drawable.brushes);
+    },
+
+    setShapes(shapes) {
+      updateAutoShapes(shapesGroup, shapes, state.drawable.brushes);
     },
 
     getFen() {
