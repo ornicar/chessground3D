@@ -12,6 +12,14 @@ import { type PieceHoverController } from './hover';
 import { clearMoveDestinationHighlights, updateMoveDestinationHighlights } from './moveDestinationHighlight';
 import { coordinatesToSquare, getPieceAtSquare, keyToCoordinates, parseSquare, pieceCodes } from './util';
 
+type DrawState = {
+  pointerId: number;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+};
+
 type DragState = {
   piece: THREE.Mesh;
   pointerId: number;
@@ -94,6 +102,7 @@ export function setupPieceInteraction({
   scene.add(premoveToHighlight);
   scene.add(selectableMoveHighlights);
 
+  let drawState: DrawState | null = null;
   let dragState: DragState | null = null;
   let clickState: ClickState | null = null;
   let selectedPiece: THREE.Mesh | null = null;
@@ -768,71 +777,82 @@ export function setupPieceInteraction({
 
       if (event.button === 2) {
         if (hasBoardIntersection && isWithinBoard(boardPoint.x, boardPoint.z)) {
+          drawState = {
+            pointerId: event.pointerId,
+            fromX: getSquareCoordinate(boardPoint.x),
+            fromY: getSquareCoordinate(boardPoint.z),
+            toX: getSquareCoordinate(boardPoint.x),
+            toY: getSquareCoordinate(boardPoint.z),
+          };
           event.stopPropagation();
+          console.log('Draw started', drawState);
         }
       }
-      if (event.button === 0) {
-        const piece = getPieceUnderPointer(event);
-        if (!piece) {
-          if (selectedPiece) {
-            event.preventDefault();
-            event.stopPropagation();
-          }
-          return;
-        }
 
-        if (!canInteractWithPiece(piece)) {
-          return;
-        }
+      if (event.button !== 0) {
+        return;
+      }
 
-        if (!draggable) {
+      const piece = getPieceUnderPointer(event);
+      if (!piece) {
+        if (selectedPiece) {
+          event.preventDefault();
           event.stopPropagation();
-          clickState = {
-            pointerId: event.pointerId,
-            startClientX: event.clientX,
-            startClientY: event.clientY,
-          };
-          return;
         }
+        return;
+      }
 
-        // If a piece is pinned, clicking another piece should act as a click target,
-        // not start a drag on the clicked piece.
-        if (selectedPiece && piece !== selectedPiece) {
-          event.stopPropagation();
+      if (!canInteractWithPiece(piece)) {
+        return;
+      }
 
-          if (isOppositeColor(selectedPiece, piece)) {
-            const targetX = piece.position.x;
-            const targetZ = piece.position.z;
-            if (attemptInteractionMove(selectedPiece, targetX, targetZ)) {
-              clearSelection();
-              return;
-            }
-          }
-
-          selectPiece(piece);
-          return;
-        }
-
+      if (!draggable) {
         event.stopPropagation();
-        const pointerOffsetX = hasBoardIntersection ? piece.position.x - boardPoint.x : 0;
-        const pointerOffsetZ = hasBoardIntersection ? piece.position.z - boardPoint.z : 0;
-
-        dragState = {
-          piece,
+        clickState = {
           pointerId: event.pointerId,
-          startPosition: piece.position.clone(),
           startClientX: event.clientX,
           startClientY: event.clientY,
-          pointerOffsetX,
-          pointerOffsetZ,
-          hasMoved: false,
         };
-        controls.enabled = false;
-        hoverController.setPinnedPiece(piece);
-        hoverController.setIgnoredPiece(piece);
-        hoverController.updateFromPointerEvent(event);
-        renderer.domElement.setPointerCapture(event.pointerId);
+        return;
       }
+
+      // If a piece is pinned, clicking another piece should act as a click target,
+      // not start a drag on the clicked piece.
+      if (selectedPiece && piece !== selectedPiece) {
+        event.stopPropagation();
+
+        if (isOppositeColor(selectedPiece, piece)) {
+          const targetX = piece.position.x;
+          const targetZ = piece.position.z;
+          if (attemptInteractionMove(selectedPiece, targetX, targetZ)) {
+            clearSelection();
+            return;
+          }
+        }
+
+        selectPiece(piece);
+        return;
+      }
+
+      event.stopPropagation();
+      const pointerOffsetX = hasBoardIntersection ? piece.position.x - boardPoint.x : 0;
+      const pointerOffsetZ = hasBoardIntersection ? piece.position.z - boardPoint.z : 0;
+
+      dragState = {
+        piece,
+        pointerId: event.pointerId,
+        startPosition: piece.position.clone(),
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        pointerOffsetX,
+        pointerOffsetZ,
+        hasMoved: false,
+      };
+      controls.enabled = false;
+      hoverController.setPinnedPiece(piece);
+      hoverController.setIgnoredPiece(piece);
+      hoverController.updateFromPointerEvent(event);
+      renderer.domElement.setPointerCapture(event.pointerId);
     },
     { capture: true },
   );
@@ -840,6 +860,21 @@ export function setupPieceInteraction({
   renderer.domElement.addEventListener('pointermove', event => {
     if (!interactionEnabled) {
       return;
+    }
+
+    if (drawState && event.pointerId === drawState.pointerId) {
+      pointerRaycaster.setFromCamera(pointerNdcFromEvent(event, pointerNdc), camera);
+      const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
+      if (hasBoardIntersection && isWithinBoard(boardPoint.x, boardPoint.z)) {
+        const toX = getSquareCoordinate(boardPoint.x);
+        const toY = getSquareCoordinate(boardPoint.z);
+        if (toX !== drawState.toX || toY !== drawState.toY) {
+          drawState.toX = toX;
+          drawState.toY = toY;
+          console.log('Drawing ', drawState);
+          event.stopPropagation();
+        }
+      }
     }
 
     if (!dragState || event.pointerId !== dragState.pointerId) {
@@ -870,11 +905,29 @@ export function setupPieceInteraction({
   });
 
   renderer.domElement.addEventListener('pointerup', event => {
-    // we just handle left-click interactions
-    if (event.button !== 0 || !interactionEnabled) {
+    if (!interactionEnabled) {
       return;
     }
 
+    if (event.button === 2 && drawState && event.pointerId === drawState.pointerId) {
+      pointerRaycaster.setFromCamera(pointerNdcFromEvent(event, pointerNdc), camera);
+      const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
+      if (hasBoardIntersection && isWithinBoard(boardPoint.x, boardPoint.z)) {
+        const toX = getSquareCoordinate(boardPoint.x);
+        const toY = getSquareCoordinate(boardPoint.z);
+        if (toX !== drawState.toX || toY !== drawState.toY) {
+          drawState.toX = toX;
+          drawState.toY = toY;
+        }
+        console.log('Draw finished', drawState);
+        drawState = null;
+        event.stopPropagation();
+      }
+    }
+
+    if (event.button !== 0) {
+      return;
+    }
     if (dragState && event.pointerId === dragState.pointerId) {
       finishDrag(event);
       return;
