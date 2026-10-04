@@ -103,6 +103,7 @@ export function setupPieceInteraction({
   scene.add(selectableMoveHighlights);
 
   let drawState: DrawState | null = null;
+  let drawEnabled = true;
   let dragState: DragState | null = null;
   let clickState: ClickState | null = null;
   let selectedPiece: THREE.Mesh | null = null;
@@ -775,7 +776,7 @@ export function setupPieceInteraction({
       pointerRaycaster.setFromCamera(pointerNdcFromEvent(event, pointerNdc), camera);
       const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
 
-      if (event.button === 2) {
+      if (event.button === 2 && drawEnabled) {
         if (hasBoardIntersection && isWithinBoard(boardPoint.x, boardPoint.z)) {
           drawState = {
             pointerId: event.pointerId,
@@ -973,6 +974,11 @@ export function setupPieceInteraction({
     if (interactionEnabled) {
       cancelQueuedPremove();
     }
+  });
+
+  renderer.domElement.addEventListener('dblclick', event => {
+    drawEnabled = !drawEnabled;
+    event.preventDefault();
   });
 
   return {
