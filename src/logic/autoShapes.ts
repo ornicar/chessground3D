@@ -1,7 +1,7 @@
 import { type DrawBrushes, type DrawShape } from '@lichess-org/chessground/draw';
 import * as THREE from 'three';
 
-import { createArrowMesh, createCustomSvgMesh } from '../objects/createAutoShapes';
+import { createArrowMesh, createCircleMesh, createCustomSvgMesh } from '../objects/createAutoShapes';
 
 import { keyToCoordinates } from './util';
 
@@ -36,17 +36,22 @@ export function updateAutoShapes(group: THREE.Group, shapes: readonly DrawShape[
       continue;
     }
 
-    if (!shape.dest || !shape.brush) {
-      continue;
-    }
-
-    const dest = keyToCoordinates(shape.dest);
-    if (!dest) {
+    if (!shape.brush) {
       continue;
     }
 
     const brush = brushes[shape.brush];
     if (!brush) {
+      continue;
+    }
+
+    if (!shape.dest || shape.dest === shape.orig) {
+      group.add(createCircleMesh(orig.x, orig.z, brush.color, brush.opacity));
+      continue;
+    }
+
+    const dest = keyToCoordinates(shape.dest);
+    if (!dest) {
       continue;
     }
 

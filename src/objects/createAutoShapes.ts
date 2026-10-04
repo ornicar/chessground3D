@@ -69,6 +69,27 @@ export function createArrowMesh(
   return mesh;
 }
 
+const CIRCLE_OUTER_RADIUS = 0.47; // squares are 1x1, so the ring stays inside its square
+const CIRCLE_INNER_RADIUS = 0.4;
+
+export function createCircleMesh(x: number, z: number, color: string, opacity: number): THREE.Mesh {
+  const geometry = new THREE.RingGeometry(CIRCLE_INNER_RADIUS, CIRCLE_OUTER_RADIUS, 64);
+  geometry.rotateX(-Math.PI / 2);
+
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    opacity,
+    transparent: opacity < 1,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(x, ARROW_HEIGHT, z);
+  mesh.renderOrder = 12;
+  return mesh;
+}
+
 const CUSTOM_SVG_HEIGHT = 0.021;
 
 export function createCustomSvgMesh(x: number, z: number, svgHtml: string, size = 2.0): THREE.Mesh {
