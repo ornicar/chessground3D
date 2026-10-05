@@ -945,6 +945,7 @@ export function setupPieceInteraction({
           drawState.toX = toX;
           drawState.toY = toY;
         }
+        // synchronize group (drawing over an existing shape clears it)
         drawState = null;
         event.stopPropagation();
       }

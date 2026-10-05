@@ -11,7 +11,7 @@ import { createPieceHoverController } from './logic/hover.js';
 import { setupPieceInteraction } from './logic/interaction.js';
 import { applyInteractionPolicy } from './logic/interactionPolicy.js';
 import { setupMoveAttemptAdapter } from './logic/moveAttemptAdapter.js';
-import { updateShapes } from './logic/shapes.js';
+import { updateMeshesFromShapes } from './logic/shapes.js';
 import { coordinatesToSquare, pieceCodes } from './logic/util.js';
 import { createA1Marker, createCheckHighlightMarker, createH8Marker } from './objects/createMarkers.js';
 import { piecesToScene } from './objects/createPieces.js';
@@ -220,11 +220,11 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
     },
 
     setAutoShapes(shapes) {
-      updateShapes(autoShapesGroup, shapes, state.drawable.brushes);
+      updateMeshesFromShapes(autoShapesGroup, shapes, state.drawable.brushes);
     },
 
     setShapes(shapes) {
-      updateShapes(userShapesGroup, shapes, state.drawable.brushes);
+      updateMeshesFromShapes(userShapesGroup, shapes, state.drawable.brushes);
     },
 
     getFen() {

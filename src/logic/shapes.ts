@@ -22,7 +22,11 @@ export function clearShapes(group: THREE.Group) {
   group.clear();
 }
 
-export function updateShapes(group: THREE.Group, shapes: readonly DrawShape[], brushes: DrawBrushes) {
+export function updateMeshesFromShapes(
+  group: THREE.Group,
+  shapes: readonly DrawShape[],
+  brushes: DrawBrushes,
+) {
   clearShapes(group);
 
   for (const shape of shapes) {
