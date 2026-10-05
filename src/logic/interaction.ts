@@ -1,3 +1,4 @@
+import { type State } from '@lichess-org/chessground/state';
 import { type Color, type Key } from '@lichess-org/chessground/types';
 import * as THREE from 'three';
 import { type OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -21,6 +22,7 @@ type DrawState = {
   toX: number;
   toY: number;
   shapeMesh: THREE.Mesh;
+  brush: string;
 };
 
 type DragState = {
@@ -46,9 +48,6 @@ type SetupPieceInteractionParams = {
   renderer: THREE.WebGLRenderer;
   controls: OrbitControls;
   hoverController: PieceHoverController;
-  allowWhiteInteraction?: boolean;
-  allowBlackInteraction?: boolean;
-  onMoveAttempt?: (uci: string) => boolean; // Validate move in UCI form; return true if valid
 };
 
 export type PieceInteractionController = {
@@ -70,6 +69,7 @@ export type PieceInteractionController = {
   getQueuedPremove: () => { orig: Key; dest: Key } | undefined;
   playQueuedPremove: () => boolean; // attempt to play the queued premove now; always clears it
   cancelQueuedPremove: () => void;
+  setState: (newState: State | null) => void;
 };
 
 export function setupPieceInteraction({
@@ -78,8 +78,6 @@ export function setupPieceInteraction({
   renderer,
   controls,
   hoverController,
-  allowWhiteInteraction: initialAllowWhiteInteraction = true,
-  allowBlackInteraction: initialAllowBlackInteraction = true,
 }: SetupPieceInteractionParams): PieceInteractionController {
   const pointerRaycaster = new THREE.Raycaster();
   const pointerNdc = new THREE.Vector2();
@@ -105,15 +103,16 @@ export function setupPieceInteraction({
   scene.add(premoveToHighlight);
   scene.add(selectableMoveHighlights);
 
-  let drawState: DrawState | null = null;
+  let state: State | null = null;
+  let drawState: DrawState | null = null; // maybe use state?.drawable.current instead
   let drawEnabled = true;
   let dragState: DragState | null = null;
   let clickState: ClickState | null = null;
   let selectedPiece: THREE.Mesh | null = null;
   let onMoveAttempt: ((uci: string) => boolean) | undefined = undefined;
   let onMove: ((from: string, to: string, isPremove: boolean) => void) | undefined = undefined;
-  let allowWhiteInteraction = initialAllowWhiteInteraction;
-  let allowBlackInteraction = initialAllowBlackInteraction;
+  let allowWhiteInteraction = true;
+  let allowBlackInteraction = true;
   let draggable = true;
   let selectable = true;
   let interactionEnabled = true;
@@ -419,6 +418,10 @@ export function setupPieceInteraction({
     if (selectedPiece) {
       showSelectableMoveHighlights(selectedPiece);
     }
+  }
+
+  function setState(newState: State | null) {
+    state = newState;
   }
 
   function setMovableColor(color?: Color | 'both') {
@@ -795,6 +798,7 @@ export function setupPieceInteraction({
             toX: fromX,
             toY: fromY,
             shapeMesh: createCircleMesh(fromX, fromY, brush, 1),
+            brush: brush,
           };
           scene.add(drawState.shapeMesh);
         }
@@ -876,11 +880,12 @@ export function setupPieceInteraction({
         const toX = getSquareCoordinate(boardPoint.x);
         const toY = getSquareCoordinate(boardPoint.z);
         if (toX !== drawState.toX || toY !== drawState.toY) {
+          const brush = event.shiftKey ? 'red' : event.altKey ? 'blue' : event.ctrlKey ? 'red' : 'green';
           drawState.toX = toX;
           drawState.toY = toY;
+          drawState.brush = brush;
           drawState.shapeMesh.removeFromParent();
           disposeShape(drawState.shapeMesh);
-          const brush = event.shiftKey ? 'red' : event.altKey ? 'blue' : event.ctrlKey ? 'red' : 'green';
           if (drawState.toX === drawState.fromX && drawState.toY === drawState.fromY) {
             drawState.shapeMesh = createCircleMesh(drawState.fromX, drawState.fromY, brush, 1);
           } else {
@@ -943,7 +948,21 @@ export function setupPieceInteraction({
 
     if (event.button === 2 && drawState && event.pointerId === drawState.pointerId) {
       handleDraw(event);
-      // synchronize group (drawing over an existing shape clears it)
+      const orig = coordinatesToSquare(drawState.fromX, drawState.fromY);
+      const dest = coordinatesToSquare(drawState.toX, drawState.toY);
+      const brush = drawState.brush;
+
+      console.log(
+        'orig:',
+        orig,
+        'dest:',
+        dest,
+        'brush:',
+        brush,
+        'state?.drawable.shapes:',
+        state?.drawable.shapes,
+      );
+
       drawState = null;
     }
 
@@ -1021,5 +1040,6 @@ export function setupPieceInteraction({
     getQueuedPremove,
     playQueuedPremove,
     cancelQueuedPremove,
+    setState,
   };
 }

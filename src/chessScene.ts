@@ -171,6 +171,7 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
 
     setOrientation(s.orientation);
     setAllowInteractionForColors(s);
+    interactionController.setState(s); // just give it all
   }
 
   // Load scene and templates (pieces and materials)
