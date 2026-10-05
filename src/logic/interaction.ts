@@ -798,7 +798,7 @@ export function setupPieceInteraction({
             toX: fromX,
             toY: fromY,
             shapeMesh: createCircleMesh(fromX, fromY, brush, 1),
-            brush: brush,
+            brush,
           };
           scene.add(drawState.shapeMesh);
         }
@@ -952,18 +952,38 @@ export function setupPieceInteraction({
       const dest = coordinatesToSquare(drawState.toX, drawState.toY);
       const brush = drawState.brush;
 
-      console.log(
-        'orig:',
-        orig,
-        'dest:',
-        dest,
-        'brush:',
-        brush,
-        'state?.drawable.shapes:',
-        state?.drawable.shapes,
-      );
+      const shapes = state?.drawable?.shapes || [];
+
+      let shapeFound = false;
+      for (let i = shapes.length - 1; i >= 0; i--) {
+        const shape = shapes[i];
+
+        if (shape.orig === orig && (shape.dest === dest || (orig === dest && !shape.dest))) {
+          if (shape.brush === brush) {
+            drawState.shapeMesh.removeFromParent();
+            disposeShape(drawState.shapeMesh);
+            shapes.splice(i, 1);
+          } else {
+            shape.brush = brush;
+          }
+          shapeFound = true;
+          break;
+        }
+      }
+
+      if (!shapeFound) {
+        shapes.push({
+          orig,
+          dest,
+          brush,
+        });
+      }
+      if (state?.drawable) {
+        state.drawable.shapes = shapes;
+      }
 
       drawState = null;
+      state?.drawable?.onChange?.(shapes);
     }
 
     if (event.button !== 0) {
