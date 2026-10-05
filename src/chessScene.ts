@@ -6,12 +6,12 @@ import { type Color, type Key, type MouchEvent, type Piece } from '@lichess-org/
 import { eventPosition } from '@lichess-org/chessground/util';
 import * as THREE from 'three';
 
-import { updateAutoShapes } from './logic/autoShapes.js';
 import { updateCheckHighlight } from './logic/checkHighlight.js';
 import { createPieceHoverController } from './logic/hover.js';
 import { setupPieceInteraction } from './logic/interaction.js';
 import { applyInteractionPolicy } from './logic/interactionPolicy.js';
 import { setupMoveAttemptAdapter } from './logic/moveAttemptAdapter.js';
+import { updateShapes } from './logic/shapes.js';
 import { coordinatesToSquare, pieceCodes } from './logic/util.js';
 import { createA1Marker, createCheckHighlightMarker, createH8Marker } from './objects/createMarkers.js';
 import { piecesToScene } from './objects/createPieces.js';
@@ -55,12 +55,12 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
   const h8Marker = createH8Marker();
   const checkHighlight = createCheckHighlightMarker();
   const autoShapesGroup = new THREE.Group();
-  const shapesGroup = new THREE.Group();
+  const userShapesGroup = new THREE.Group();
   scene.add(a1Marker);
   scene.add(h8Marker);
   scene.add(checkHighlight);
   scene.add(autoShapesGroup);
-  scene.add(shapesGroup);
+  scene.add(userShapesGroup);
   const stopHandlingResize = handleResize(sceneRoot, camera, renderer);
 
   let materialTemplates = new Map<string, THREE.Material>();
@@ -220,11 +220,11 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
     },
 
     setAutoShapes(shapes) {
-      updateAutoShapes(autoShapesGroup, shapes, state.drawable.brushes);
+      updateShapes(autoShapesGroup, shapes, state.drawable.brushes);
     },
 
     setShapes(shapes) {
-      updateAutoShapes(shapesGroup, shapes, state.drawable.brushes);
+      updateShapes(userShapesGroup, shapes, state.drawable.brushes);
     },
 
     getFen() {

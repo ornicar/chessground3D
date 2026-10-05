@@ -1,11 +1,11 @@
 import { type DrawBrushes, type DrawShape } from '@lichess-org/chessground/draw';
 import * as THREE from 'three';
 
-import { createArrowMesh, createCircleMesh, createCustomSvgMesh } from '../objects/createAutoShapes';
+import { createArrowMesh, createCircleMesh, createCustomSvgMesh } from '../objects/createShapes';
 
 import { keyToCoordinates } from './util';
 
-export function clearAutoShapes(group: THREE.Group) {
+export function clearShapes(group: THREE.Group) {
   for (const child of group.children) {
     if (child instanceof THREE.Mesh) {
       child.geometry.dispose();
@@ -18,8 +18,8 @@ export function clearAutoShapes(group: THREE.Group) {
   group.clear();
 }
 
-export function updateAutoShapes(group: THREE.Group, shapes: readonly DrawShape[], brushes: DrawBrushes) {
-  clearAutoShapes(group);
+export function updateShapes(group: THREE.Group, shapes: readonly DrawShape[], brushes: DrawBrushes) {
+  clearShapes(group);
 
   for (const shape of shapes) {
     const orig = keyToCoordinates(shape.orig);
