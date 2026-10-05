@@ -787,13 +787,14 @@ export function setupPieceInteraction({
         if (hasBoardIntersection && isWithinBoard(boardPoint.x, boardPoint.z)) {
           const fromX = getSquareCoordinate(boardPoint.x);
           const fromY = getSquareCoordinate(boardPoint.z);
+          const brush = event.shiftKey ? 'red' : event.altKey ? 'blue' : event.ctrlKey ? 'red' : 'green';
           drawState = {
             pointerId: event.pointerId,
             fromX,
             fromY,
             toX: fromX,
             toY: fromY,
-            shapeMesh: createCircleMesh(fromX, fromY, 'green', 1),
+            shapeMesh: createCircleMesh(fromX, fromY, brush, 1),
           };
           scene.add(drawState.shapeMesh);
         }
@@ -883,15 +884,16 @@ export function setupPieceInteraction({
           drawState.toY = toY;
           drawState.shapeMesh.removeFromParent();
           disposeShape(drawState.shapeMesh);
+          const brush = event.shiftKey ? 'red' : event.altKey ? 'blue' : event.ctrlKey ? 'red' : 'green';
           if (drawState.toX === drawState.fromX && drawState.toY === drawState.fromY) {
-            drawState.shapeMesh = createCircleMesh(drawState.fromX, drawState.fromY, 'green', 1);
+            drawState.shapeMesh = createCircleMesh(drawState.fromX, drawState.fromY, brush, 1);
           } else {
             drawState.shapeMesh = createArrowMesh(
               drawState.fromX,
               drawState.fromY,
               drawState.toX,
               drawState.toY,
-              'green',
+              brush,
               1,
             );
           }
