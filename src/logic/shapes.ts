@@ -14,7 +14,7 @@ export function disposeShape(shape: THREE.Mesh) {
 }
 
 export function clearShapes(group: THREE.Group) {
-  for (const child of [...group.children]) {
+  for (const child of group.children) {
     if (child instanceof THREE.Mesh) {
       disposeShape(child);
     }
