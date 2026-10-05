@@ -814,6 +814,14 @@ export function setupPieceInteraction({
         return;
       }
 
+      if (state?.drawable) {
+        state.drawable.shapes = [];
+        if (userShapesGroup) {
+          updateMeshesFromShapes(userShapesGroup, state.drawable.shapes, state.drawable.brushes);
+        }
+      }
+      state?.drawable?.onChange?.(state.drawable.shapes);
+
       const piece = getPieceUnderPointer(event);
       if (!piece) {
         if (selectedPiece) {
