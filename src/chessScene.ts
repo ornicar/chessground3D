@@ -94,6 +94,7 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
     controls,
     hoverController,
   });
+  interactionController.setUserShapesGroup(userShapesGroup);
 
   function notifyMove(from: string, to: string, isPremove: boolean) {
     const orig = from as Key;

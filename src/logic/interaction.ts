@@ -12,7 +12,7 @@ import { createArrowMesh, createCircleMesh } from '../objects/createShapes.js';
 
 import { type PieceHoverController } from './hover';
 import { clearMoveDestinationHighlights, updateMoveDestinationHighlights } from './moveDestinationHighlight';
-import { disposeShape } from './shapes.js';
+import { disposeShape, updateMeshesFromShapes } from './shapes.js';
 import { coordinatesToSquare, getPieceAtSquare, keyToCoordinates, parseSquare, pieceCodes } from './util';
 
 type DrawState = {
@@ -70,6 +70,7 @@ export type PieceInteractionController = {
   playQueuedPremove: () => boolean; // attempt to play the queued premove now; always clears it
   cancelQueuedPremove: () => void;
   setState: (newState: State | null) => void;
+  setUserShapesGroup: (group: THREE.Group) => void;
 };
 
 export function setupPieceInteraction({
@@ -125,6 +126,7 @@ export function setupPieceInteraction({
   let queuedPremove: { orig: Key; dest: Key } | undefined;
   let onPremoveSet: ((orig: Key, dest: Key) => void) | undefined;
   let onPremoveUnset: (() => void) | undefined;
+  let userShapesGroup: THREE.Group | null = null;
 
   function getPieceMeshFromObject(object: THREE.Object3D | null): THREE.Mesh | null {
     let current: THREE.Object3D | null = object;
@@ -422,6 +424,10 @@ export function setupPieceInteraction({
 
   function setState(newState: State | null) {
     state = newState;
+  }
+
+  function setUserShapesGroup(group: THREE.Group) {
+    userShapesGroup = group;
   }
 
   function setMovableColor(color?: Color | 'both') {
@@ -960,8 +966,6 @@ export function setupPieceInteraction({
 
         if (shape.orig === orig && (shape.dest === dest || (orig === dest && !shape.dest))) {
           if (shape.brush === brush) {
-            drawState.shapeMesh.removeFromParent();
-            disposeShape(drawState.shapeMesh);
             shapes.splice(i, 1);
           } else {
             shape.brush = brush;
@@ -980,8 +984,13 @@ export function setupPieceInteraction({
       }
       if (state?.drawable) {
         state.drawable.shapes = shapes;
+        if (userShapesGroup) {
+          updateMeshesFromShapes(userShapesGroup, shapes, state.drawable.brushes);
+        }
       }
 
+      drawState.shapeMesh.removeFromParent();
+      disposeShape(drawState.shapeMesh);
       drawState = null;
       state?.drawable?.onChange?.(shapes);
     }
@@ -1061,5 +1070,6 @@ export function setupPieceInteraction({
     playQueuedPremove,
     cancelQueuedPremove,
     setState,
+    setUserShapesGroup,
   };
 }
