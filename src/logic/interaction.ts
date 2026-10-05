@@ -868,11 +868,7 @@ export function setupPieceInteraction({
     { capture: true },
   );
 
-  renderer.domElement.addEventListener('pointermove', event => {
-    if (!interactionEnabled) {
-      return;
-    }
-
+  function handleDraw(event: PointerEvent) {
     if (drawState && event.pointerId === drawState.pointerId) {
       pointerRaycaster.setFromCamera(pointerNdcFromEvent(event, pointerNdc), camera);
       const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
@@ -901,6 +897,16 @@ export function setupPieceInteraction({
           event.stopPropagation();
         }
       }
+    }
+  }
+
+  renderer.domElement.addEventListener('pointermove', event => {
+    if (!interactionEnabled) {
+      return;
+    }
+
+    if (drawState && event.pointerId === drawState.pointerId) {
+      handleDraw(event);
     }
 
     if (!dragState || event.pointerId !== dragState.pointerId) {
@@ -936,19 +942,9 @@ export function setupPieceInteraction({
     }
 
     if (event.button === 2 && drawState && event.pointerId === drawState.pointerId) {
-      pointerRaycaster.setFromCamera(pointerNdcFromEvent(event, pointerNdc), camera);
-      const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
-      if (hasBoardIntersection && isWithinBoard(boardPoint.x, boardPoint.z)) {
-        const toX = getSquareCoordinate(boardPoint.x);
-        const toY = getSquareCoordinate(boardPoint.z);
-        if (toX !== drawState.toX || toY !== drawState.toY) {
-          drawState.toX = toX;
-          drawState.toY = toY;
-        }
-        // synchronize group (drawing over an existing shape clears it)
-        drawState = null;
-        event.stopPropagation();
-      }
+      handleDraw(event);
+      // synchronize group (drawing over an existing shape clears it)
+      drawState = null;
     }
 
     if (event.button !== 0) {
