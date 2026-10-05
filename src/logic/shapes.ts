@@ -5,14 +5,18 @@ import { createArrowMesh, createCircleMesh, createCustomSvgMesh } from '../objec
 
 import { keyToCoordinates } from './util';
 
+export function disposeShape(shape: THREE.Mesh) {
+  shape.geometry.dispose();
+  if (shape.material instanceof THREE.MeshBasicMaterial && shape.material.map) {
+    shape.material.map.dispose();
+  }
+  (shape.material as THREE.Material).dispose();
+}
+
 export function clearShapes(group: THREE.Group) {
-  for (const child of group.children) {
+  for (const child of [...group.children]) {
     if (child instanceof THREE.Mesh) {
-      child.geometry.dispose();
-      if (child.material instanceof THREE.MeshBasicMaterial && child.material.map) {
-        child.material.map.dispose();
-      }
-      (child.material as THREE.Material).dispose();
+      disposeShape(child);
     }
   }
   group.clear();

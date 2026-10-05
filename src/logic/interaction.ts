@@ -7,9 +7,11 @@ import {
   createLastMoveToHighlightMarker,
   createPremoveHighlightMarker,
 } from '../objects/createMarkers';
+import { createArrowMesh, createCircleMesh } from '../objects/createShapes.js';
 
 import { type PieceHoverController } from './hover';
 import { clearMoveDestinationHighlights, updateMoveDestinationHighlights } from './moveDestinationHighlight';
+import { disposeShape } from './shapes.js';
 import { coordinatesToSquare, getPieceAtSquare, keyToCoordinates, parseSquare, pieceCodes } from './util';
 
 type DrawState = {
@@ -18,6 +20,7 @@ type DrawState = {
   fromY: number;
   toX: number;
   toY: number;
+  shapeMesh: THREE.Mesh;
 };
 
 type DragState = {
@@ -782,14 +785,17 @@ export function setupPieceInteraction({
 
       if (event.button === 2 && drawEnabled) {
         if (hasBoardIntersection && isWithinBoard(boardPoint.x, boardPoint.z)) {
+          const fromX = getSquareCoordinate(boardPoint.x);
+          const fromY = getSquareCoordinate(boardPoint.z);
           drawState = {
             pointerId: event.pointerId,
-            fromX: getSquareCoordinate(boardPoint.x),
-            fromY: getSquareCoordinate(boardPoint.z),
-            toX: getSquareCoordinate(boardPoint.x),
-            toY: getSquareCoordinate(boardPoint.z),
+            fromX,
+            fromY,
+            toX: fromX,
+            toY: fromY,
+            shapeMesh: createCircleMesh(fromX, fromY, 'green', 1),
           };
-          console.log('Draw started', drawState);
+          scene.add(drawState.shapeMesh);
         }
       }
 
@@ -875,7 +881,21 @@ export function setupPieceInteraction({
         if (toX !== drawState.toX || toY !== drawState.toY) {
           drawState.toX = toX;
           drawState.toY = toY;
-          console.log('Drawing ', drawState);
+          drawState.shapeMesh.removeFromParent();
+          disposeShape(drawState.shapeMesh);
+          if (drawState.toX === drawState.fromX && drawState.toY === drawState.fromY) {
+            drawState.shapeMesh = createCircleMesh(drawState.fromX, drawState.fromY, 'green', 1);
+          } else {
+            drawState.shapeMesh = createArrowMesh(
+              drawState.fromX,
+              drawState.fromY,
+              drawState.toX,
+              drawState.toY,
+              'green',
+              1,
+            );
+          }
+          scene.add(drawState.shapeMesh);
           event.stopPropagation();
         }
       }
@@ -923,7 +943,6 @@ export function setupPieceInteraction({
           drawState.toX = toX;
           drawState.toY = toY;
         }
-        console.log('Draw finished', drawState);
         drawState = null;
         event.stopPropagation();
       }
