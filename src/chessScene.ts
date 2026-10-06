@@ -96,9 +96,7 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
   });
   interactionController.setUserShapesGroup(userShapesGroup);
 
-  function notifyMove(from: string, to: string, isPremove: boolean) {
-    const orig = from as Key;
-    const dest = to as Key;
+  function notifyMove(orig: Key, dest: Key, isPremove: boolean) {
     const piece = state.pieces.get(orig);
     const capturedPiece = state.pieces.get(dest);
     if (piece) {
