@@ -17,7 +17,7 @@ ui/lib/package.json
     },
 ```
 
-### Search and place *.ts files
+### Search and replace in *.ts files
 
 `'@lichess-org/chessground';` becomes `'chessground3D';`
 
