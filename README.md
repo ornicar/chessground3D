@@ -19,10 +19,10 @@
 ### Search and replace in *.ts files
 
 ```
-'@lichess-org/chessground';
+from '@lichess-org/chessground';
 ```
- becomes 
+becomes 
  ```
- 'chessground3D';
+from 'chessground3D';
  ```
 
