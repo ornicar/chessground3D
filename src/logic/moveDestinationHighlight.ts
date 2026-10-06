@@ -3,7 +3,7 @@ import type * as THREE from 'three';
 
 import { createMoveDestinationHighlightMarker } from '../objects/createMarkers';
 
-import { coordinatesToSquare, getPieceAtSquare, parseSquare } from './util';
+import { coordinatesToSquare, getPieceAtSquare, keyToCoordinates } from './util';
 
 function getSquareCoordinate(value: number): number {
   return Math.round(value + 3.5) - 3.5;
@@ -37,7 +37,7 @@ export function updateMoveDestinationHighlights(
   }
 
   for (const square of destinationSquares) {
-    const coordinates = parseSquare(square);
+    const coordinates = keyToCoordinates(square);
     if (!coordinates) {
       continue;
     }

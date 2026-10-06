@@ -21,20 +21,6 @@ export function keyToCoordinates(key: Key): { x: number; z: number } | null {
   };
 }
 
-export function parseSquare(square: string): { x: number; z: number } | null {
-  const normalized = square.trim().toLowerCase();
-  if (!/^[a-h][1-8]$/.test(normalized)) {
-    return null;
-  }
-
-  const fileIndex = normalized.charCodeAt(0) - 'a'.charCodeAt(0);
-  const rank = Number.parseInt(normalized[1], 10);
-  return {
-    x: fileIndex - 3.5,
-    z: 4.5 - rank,
-  };
-}
-
 export function getPieceAtSquare(
   scene: THREE.Scene,
   x: number,

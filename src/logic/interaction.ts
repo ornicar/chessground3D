@@ -13,7 +13,7 @@ import { createArrowMesh, createCircleMesh } from '../objects/createShapes.js';
 import { type PieceHoverController } from './hover';
 import { clearMoveDestinationHighlights, updateMoveDestinationHighlights } from './moveDestinationHighlight';
 import { disposeShape, updateMeshesFromShapes } from './shapes.js';
-import { coordinatesToSquare, getPieceAtSquare, keyToCoordinates, parseSquare, pieceCodes } from './util';
+import { coordinatesToSquare, getPieceAtSquare, keyToCoordinates, pieceCodes } from './util';
 
 type DrawState = {
   pointerId: number;
@@ -51,12 +51,12 @@ type SetupPieceInteractionParams = {
 };
 
 export type PieceInteractionController = {
-  moveProgrammaticallyBySquare: (from: string, to: string) => boolean;
+  moveProgrammaticallyBySquare: (from: Key, to: Key) => boolean;
   selectSquare: (key: Key | null) => void;
   setLastMoveSquares: (squares?: readonly Key[]) => void;
   setAllowedMoveDests: (dests?: Map<Key, readonly Key[]>, showDests?: boolean) => void;
   setMoveAttemptCallback: (callback: (uci: string) => boolean) => void; // Set callback for validating user moves
-  setMoveCallback: (callback: (from: string, to: string, isPremove: boolean) => void) => void; // Set callback after a successful move
+  setMoveCallback: (callback: (from: Key, to: Key, isPremove: boolean) => void) => void; // Set callback after a successful move
   setAllowWhiteInteraction: (allow: boolean) => void;
   setAllowBlackInteraction: (allow: boolean) => void;
   setDraggable: (enabled: boolean) => void;
@@ -111,7 +111,7 @@ export function setupPieceInteraction({
   let clickState: ClickState | null = null;
   let selectedPiece: THREE.Mesh | null = null;
   let onMoveAttempt: ((uci: string) => boolean) | undefined = undefined;
-  let onMove: ((from: string, to: string, isPremove: boolean) => void) | undefined = undefined;
+  let onMove: ((from: Key, to: Key, isPremove: boolean) => void) | undefined = undefined;
   let allowWhiteInteraction = true;
   let allowBlackInteraction = true;
   let draggable = true;
@@ -401,7 +401,7 @@ export function setupPieceInteraction({
     onMoveAttempt = callback;
   }
 
-  function setMoveCallback(callback: (from: string, to: string, isPremove: boolean) => void) {
+  function setMoveCallback(callback: (from: Key, to: Key, isPremove: boolean) => void) {
     onMove = callback;
   }
 
@@ -473,8 +473,8 @@ export function setupPieceInteraction({
     queuedPremove = undefined;
     updatePremoveHighlight();
 
-    const source = parseSquare(orig);
-    const target = parseSquare(dest);
+    const source = keyToCoordinates(orig);
+    const target = keyToCoordinates(dest);
     if (!source || !target) {
       return false;
     }
@@ -588,9 +588,9 @@ export function setupPieceInteraction({
     return true;
   }
 
-  function moveProgrammaticallyBySquare(from: string, to: string): boolean {
-    const source = parseSquare(from);
-    const target = parseSquare(to);
+  function moveProgrammaticallyBySquare(from: Key, to: Key): boolean {
+    const source = keyToCoordinates(from);
+    const target = keyToCoordinates(to);
     if (!source || !target) {
       return false;
     }
@@ -604,7 +604,7 @@ export function setupPieceInteraction({
       return;
     }
 
-    const coords = parseSquare(key);
+    const coords = keyToCoordinates(key);
     if (!coords) {
       clearSelection();
       return;
