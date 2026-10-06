@@ -82,10 +82,10 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
     stop: notImplemented('stop'),
     explode: notImplemented('explode'),
     setShapes(shapes) {
-      scene.setShapes(shapes);
+      scene.setUserShapes(shapes);
     },
     setAutoShapes(shapes) {
-      scene.setAutoShapes(shapes);
+      scene.setSystemShapes(shapes);
     },
     dragNewPiece(piece, event, force) {
       cancelNewPieceDrag?.();

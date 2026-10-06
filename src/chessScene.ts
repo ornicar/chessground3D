@@ -30,8 +30,8 @@ export interface ChessScene {
   set(state: State, hasFen?: boolean): void;
   move(from: Key, to: Key): void;
   selectSquare(key: Key | null): void;
-  setAutoShapes(shapes: DrawShape[]): void;
-  setShapes(shapes: DrawShape[]): void;
+  setSystemShapes(shapes: DrawShape[]): void;
+  setUserShapes(shapes: DrawShape[]): void;
   getFen(): string;
   getKeyAtDomPos(pos: [number, number]): Key | undefined;
   dragNewPiece(piece: Piece, event: MouchEvent, force?: boolean): () => void;
@@ -54,12 +54,12 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
   const a1Marker = createA1Marker();
   const h8Marker = createH8Marker();
   const checkHighlight = createCheckHighlightMarker();
-  const autoShapesGroup = new THREE.Group();
+  const systemShapesGroup = new THREE.Group();
   const userShapesGroup = new THREE.Group();
   scene.add(a1Marker);
   scene.add(h8Marker);
   scene.add(checkHighlight);
-  scene.add(autoShapesGroup);
+  scene.add(systemShapesGroup);
   scene.add(userShapesGroup);
   const stopHandlingResize = handleResize(sceneRoot, camera, renderer);
 
@@ -221,11 +221,11 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
       interactionController.selectSquare(key);
     },
 
-    setAutoShapes(shapes) {
-      updateMeshesFromShapes(autoShapesGroup, shapes, state.drawable.brushes);
+    setSystemShapes(shapes) {
+      updateMeshesFromShapes(systemShapesGroup, shapes, state.drawable.brushes);
     },
 
-    setShapes(shapes) {
+    setUserShapes(shapes) {
       updateMeshesFromShapes(userShapesGroup, shapes, state.drawable.brushes);
     },
 
