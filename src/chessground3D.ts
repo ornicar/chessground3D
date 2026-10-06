@@ -8,10 +8,12 @@ import { opposite } from '@lichess-org/chessground/util';
 import { createChessScene } from './chessScene';
 
 export function Chessground(element: HTMLElement, config?: Config): Api {
+  // temporary hack to allow a 2D view
   if (new URLSearchParams(window.location.search).get('2D')) {
     return Chessground2D(element, config);
   }
 
+  // temporary logging of not implemented functions in 3D scene
   function notImplemented(name: string): () => void;
   function notImplemented<T>(name: string, returnValue: T): () => T;
   function notImplemented<T>(name: string, returnValue?: T) {
@@ -21,6 +23,7 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
     };
   }
 
+  // Mimic chessground initialisation
   const maybeState: HeadlessState = defaults();
   configure(maybeState, config || {});
   const state = maybeState as State;
@@ -55,15 +58,18 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
     getFen() {
       return scene.getFen();
     },
+
     toggleOrientation() {
       state.orientation = opposite(state.orientation);
       state.animation.current = state.draggable.current = state.selected = undefined;
       scene.selectSquare(null);
       scene.set(state, false);
     },
+
     move(orig, dest) {
       scene.move(orig, dest);
     },
+
     setPieces(pieces: PiecesDiff) {
       for (const [key, piece] of pieces) {
         if (piece) {
@@ -74,32 +80,45 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
       }
       scene.set(state);
     },
+
     selectSquare(key, _force): void {
       scene.selectSquare(key);
     },
+
     newPiece: notImplemented('newPiece'),
+
     cancelMove: notImplemented('cancelMove'),
+
     stop: notImplemented('stop'),
+
     explode: notImplemented('explode'),
+
     setShapes(shapes) {
       scene.setUserShapes(shapes);
     },
+
     setAutoShapes(shapes) {
       scene.setSystemShapes(shapes);
     },
+
     dragNewPiece(piece, event, force) {
       cancelNewPieceDrag?.();
       cancelNewPieceDrag = scene.dragNewPiece(piece, event, force);
     },
+
     redrawAll: notImplemented('redrawAll'),
     playPremove() {
       return scene.playPremove();
     },
+
     cancelPremove() {
       scene.cancelPremove();
     },
+
     playPredrop: notImplemented('playPredrop', false),
+
     cancelPredrop: notImplemented('cancelPredrop'),
+
     getKeyAtDomPos(pos) {
       return scene.getKeyAtDomPos(pos);
     },
