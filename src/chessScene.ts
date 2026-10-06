@@ -20,7 +20,7 @@ import { createCamera } from './scene/createCamera.js';
 import { createLights } from './scene/createLights.js';
 import { createRenderer } from './scene/createRenderer.js';
 import { createScene } from './scene/createScene.js';
-import { createControls, getWhiteAzimuthAngle, setControlsOrientation } from './systems/controls.js';
+import { createControls } from './systems/controls.js';
 import { registerSceneRenderStep } from './systems/renderScheduler.js';
 import { handleResize } from './systems/resize.js';
 
@@ -56,11 +56,13 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
   const checkHighlight = createCheckHighlightMarker();
   const systemShapesGroup = new THREE.Group();
   const userShapesGroup = new THREE.Group();
-  scene.add(a1Marker);
-  scene.add(h8Marker);
-  scene.add(checkHighlight);
-  scene.add(systemShapesGroup);
-  scene.add(userShapesGroup);
+  const board = new THREE.Group();
+  scene.add(board);
+  board.add(a1Marker);
+  board.add(h8Marker);
+  board.add(checkHighlight);
+  board.add(systemShapesGroup);
+  board.add(userShapesGroup);
   const stopHandlingResize = handleResize(sceneRoot, camera, renderer);
 
   let materialTemplates = new Map<string, THREE.Material>();
@@ -68,14 +70,11 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
   let isDestroyed = false;
   let currentOrientation: Color | undefined;
 
-  // At the moment, orientation is defined by the position of the camera relative to the board.
-  // It would be better to reposition the pieces based on the orientation rather than moving the camera.
-  const whiteAzimuthAngle = getWhiteAzimuthAngle(controls);
   function setOrientation(orientation: Color | undefined) {
     if (!orientation || orientation === currentOrientation) {
       return;
     }
-    setControlsOrientation(camera, controls, orientation, whiteAzimuthAngle);
+    board.rotation.y = orientation === 'white' ? 0 : Math.PI;
 
     currentOrientation = orientation;
   }
@@ -83,12 +82,13 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
   setOrientation(state.orientation);
 
   // Set up piece hover and interaction
-  const hoverController = createPieceHoverController(scene, camera, renderer.domElement);
+  const hoverController = createPieceHoverController(scene, camera, renderer.domElement, board);
   sceneRoot.addEventListener('pointermove', hoverController.updateFromPointerEvent);
 
   // Set up interactions
   const interactionController = setupPieceInteraction({
     scene,
+    board,
     camera,
     renderer,
     controls,
@@ -159,7 +159,7 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
   function applyState(s: State, hasFen = true) {
     interactionController.setLastMoveSquares(s.highlight.lastMove ? s.lastMove : undefined);
     if (hasFen) {
-      piecesToScene(s.pieces, scene, pieceTemplates, materialTemplates);
+      piecesToScene(s.pieces, board, pieceTemplates, materialTemplates);
     }
     updateCheckHighlight(checkHighlight, s.check, s.highlight.check);
 
@@ -258,6 +258,7 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
       if (!hasBoardIntersection) {
         return undefined;
       }
+      board.worldToLocal(boardPoint);
 
       const boardX = boardPoint.x;
       const boardZ = boardPoint.z;

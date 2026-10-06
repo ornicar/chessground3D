@@ -22,13 +22,13 @@ const pieceCodeMap: Record<string, string> = {
 
 export function piecesToScene(
   pieces: Pieces,
-  scene: THREE.Scene,
+  board: THREE.Group,
   pieceTemplates: Map<string, THREE.Mesh>,
   materialTemplates: Map<string, THREE.Material>,
 ) {
   // Remove clones previously created.
-  for (let i = scene.children.length - 1; i >= 0; i--) {
-    const child = scene.children[i];
+  for (let i = board.children.length - 1; i >= 0; i--) {
+    const child = board.children[i];
     if (child.userData?.isClone) {
       if (child instanceof THREE.Mesh) {
         if (Array.isArray(child.material)) {
@@ -37,7 +37,7 @@ export function piecesToScene(
           child.material.dispose();
         }
       }
-      scene.remove(child);
+      board.remove(child);
     }
   }
 
@@ -68,6 +68,6 @@ export function piecesToScene(
     }
 
     clone.visible = true;
-    scene.add(clone);
+    board.add(clone);
   }
 }

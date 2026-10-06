@@ -44,6 +44,7 @@ type ClickState = {
 
 type SetupPieceInteractionParams = {
   scene: THREE.Scene;
+  board: THREE.Group;
   camera: THREE.Camera;
   renderer: THREE.WebGLRenderer;
   controls: OrbitControls;
@@ -75,6 +76,7 @@ export type PieceInteractionController = {
 
 export function setupPieceInteraction({
   scene,
+  board,
   camera,
   renderer,
   controls,
@@ -98,11 +100,11 @@ export function setupPieceInteraction({
   lastMoveToHighlight.visible = false;
   lastMoveFromHighlight.renderOrder = 8;
   lastMoveToHighlight.renderOrder = 9;
-  scene.add(lastMoveFromHighlight);
-  scene.add(lastMoveToHighlight);
-  scene.add(premoveFromHighlight);
-  scene.add(premoveToHighlight);
-  scene.add(selectableMoveHighlights);
+  board.add(lastMoveFromHighlight);
+  board.add(lastMoveToHighlight);
+  board.add(premoveFromHighlight);
+  board.add(premoveToHighlight);
+  board.add(selectableMoveHighlights);
 
   let state: State | null = null;
   let drawState: DrawState | null = null; // maybe use state?.drawable.current instead
@@ -683,6 +685,9 @@ export function setupPieceInteraction({
     }
 
     const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
+    if (hasBoardIntersection) {
+      board.worldToLocal(boardPoint);
+    }
     if (!hasBoardIntersection || !isWithinBoard(boardPoint.x, boardPoint.z)) {
       return false;
     }
@@ -703,6 +708,9 @@ export function setupPieceInteraction({
 
     pointerRaycaster.setFromCamera(pointerNdcFromEvent(event, pointerNdc), camera);
     const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
+    if (hasBoardIntersection) {
+      board.worldToLocal(boardPoint);
+    }
     if (
       !hasBoardIntersection ||
       !isWithinBoard(boardPoint.x + dragState.pointerOffsetX, boardPoint.z + dragState.pointerOffsetZ)
@@ -746,6 +754,9 @@ export function setupPieceInteraction({
 
     pointerRaycaster.setFromCamera(pointerNdcFromEvent(event, pointerNdc), camera);
     const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
+    if (hasBoardIntersection) {
+      board.worldToLocal(boardPoint);
+    }
 
     let dropApplied = false;
     const wasPremoveAttempt = isPremoveCandidate(piece);
@@ -791,6 +802,9 @@ export function setupPieceInteraction({
 
       pointerRaycaster.setFromCamera(pointerNdcFromEvent(event, pointerNdc), camera);
       const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
+      if (hasBoardIntersection) {
+        board.worldToLocal(boardPoint);
+      }
 
       if (event.button === 2 && drawEnabled) {
         if (hasBoardIntersection && isWithinBoard(boardPoint.x, boardPoint.z)) {
@@ -806,7 +820,7 @@ export function setupPieceInteraction({
             shapeMesh: createCircleMesh(fromX, fromY, brush, 1),
             brush,
           };
-          scene.add(drawState.shapeMesh);
+          board.add(drawState.shapeMesh);
         }
       }
 
@@ -890,6 +904,9 @@ export function setupPieceInteraction({
     if (drawState && event.pointerId === drawState.pointerId) {
       pointerRaycaster.setFromCamera(pointerNdcFromEvent(event, pointerNdc), camera);
       const hasBoardIntersection = pointerRaycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
+      if (hasBoardIntersection) {
+        board.worldToLocal(boardPoint);
+      }
       if (hasBoardIntersection && isWithinBoard(boardPoint.x, boardPoint.z)) {
         const toX = getSquareCoordinate(boardPoint.x);
         const toY = getSquareCoordinate(boardPoint.z);
@@ -912,7 +929,7 @@ export function setupPieceInteraction({
               1,
             );
           }
-          scene.add(drawState.shapeMesh);
+          board.add(drawState.shapeMesh);
           event.stopPropagation();
         }
       }

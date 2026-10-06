@@ -45,6 +45,7 @@ export function createPieceHoverController(
   scene: THREE.Scene,
   camera: THREE.Camera,
   domElement: HTMLElement,
+  board: THREE.Object3D = scene,
 ): PieceHoverController {
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
@@ -72,7 +73,7 @@ export function createPieceHoverController(
   squareHighlight.position.y = 0.01;
   squareHighlight.visible = false;
   squareHighlight.renderOrder = 10;
-  scene.add(squareHighlight);
+  board.add(squareHighlight);
 
   function clearHoveredState() {
     if (hovered) {
@@ -223,6 +224,9 @@ export function createPieceHoverController(
         targetPiece = hitPiece;
       } else {
         const hasBoardIntersection = raycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
+        if (hasBoardIntersection) {
+          board.worldToLocal(boardPoint);
+        }
         if (hasBoardIntersection && Math.abs(boardPoint.x) <= 4 && Math.abs(boardPoint.z) <= 4) {
           squareHighlight.position.x = Math.round(boardPoint.x + 3.5) - 3.5;
           squareHighlight.position.z = Math.round(boardPoint.z + 3.5) - 3.5;

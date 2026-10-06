@@ -1,5 +1,4 @@
-import { type Color } from '@lichess-org/chessground/types';
-import * as THREE from 'three';
+import type * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 function setLockedAzimuth(controls: OrbitControls, azimuth: number) {
@@ -13,29 +12,4 @@ export function createControls(camera: THREE.Camera, domElement: HTMLElement) {
   controls.dampingFactor = 0.05;
   setLockedAzimuth(controls, controls.getAzimuthalAngle());
   return controls;
-}
-
-export function getWhiteAzimuthAngle(controls: OrbitControls): number {
-  return controls.getAzimuthalAngle();
-}
-
-export function setControlsOrientation(
-  camera: THREE.PerspectiveCamera | THREE.OrthographicCamera,
-  controls: OrbitControls,
-  orientation: Color,
-  whiteAzimuthAngle: number,
-) {
-  const azimuth = orientation === 'white' ? whiteAzimuthAngle : whiteAzimuthAngle + Math.PI;
-  const normalizedAzimuth = THREE.MathUtils.euclideanModulo(azimuth + Math.PI, Math.PI * 2) - Math.PI;
-
-  setLockedAzimuth(controls, normalizedAzimuth);
-
-  const offset = camera.position.clone().sub(controls.target);
-  const spherical = new THREE.Spherical().setFromVector3(offset);
-  spherical.theta = normalizedAzimuth;
-  offset.setFromSpherical(spherical);
-  camera.position.copy(controls.target).add(offset);
-
-  camera.updateProjectionMatrix();
-  controls.update();
 }
