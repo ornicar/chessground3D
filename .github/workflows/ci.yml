@@ -28,4 +28,3 @@ jobs:
           node-version: ${{ matrix.node }}
       - run: pnpm install
       - run: pnpm run ${{ matrix.script }}
-
