@@ -16,13 +16,14 @@
     },
 ```
 
-### Search and replace in *.ts files
+### Search and replace in \*.ts files
 
 ```
 from '@lichess-org/chessground';
 ```
-becomes 
- ```
-from 'chessground3D';
- ```
 
+becomes
+
+```
+from 'chessground3D';
+```
