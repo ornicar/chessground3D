@@ -10,7 +10,6 @@
 ### ui/lib/package.json
 
 ```json
-ui/lib/package.json
   "build": {
     "sync": {
       "/node_modules/chessground3D/assets/scene.glb": "/public"
@@ -19,5 +18,11 @@ ui/lib/package.json
 
 ### Search and replace in *.ts files
 
-`'@lichess-org/chessground';` becomes `'chessground3D';`
+```
+'@lichess-org/chessground';
+```
+ becomes 
+ ```
+ 'chessground3D';
+ ```
 
