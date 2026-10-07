@@ -68,20 +68,16 @@ export function createChessScene(htmlElement: HTMLElement, state: State): ChessS
   let materialTemplates = new Map<string, THREE.Material>();
   let pieceTemplates = new Map<string, THREE.Mesh>();
   let isDestroyed = false;
-  let currentOrientation: Color | undefined;
+  let currentOrientation: Color = 'white';
   let targetRotationY = 0;
   let lastFrameTime = performance.now();
 
-  function setOrientation(orientation: Color | undefined) {
+  function setOrientation(orientation: Color) {
     if (!orientation || orientation === currentOrientation) {
       return;
     }
     targetRotationY =
-      currentOrientation === undefined
-        ? orientation === 'white'
-          ? 0
-          : Math.PI
-        : targetRotationY + Math.PI;
+      orientation === 'white' ? 0 : Math.PI;
 
     currentOrientation = orientation;
   }
