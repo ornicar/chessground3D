@@ -76,7 +76,12 @@ export function createChessScene(htmlElement: HTMLElement, state: State): ChessS
     if (!orientation || orientation === currentOrientation) {
       return;
     }
-    targetRotationY = orientation === 'white' ? 0 : Math.PI;
+    targetRotationY =
+      currentOrientation === undefined
+        ? orientation === 'white'
+          ? 0
+          : Math.PI
+        : targetRotationY + Math.PI;
 
     currentOrientation = orientation;
   }
@@ -193,6 +198,10 @@ export function createChessScene(htmlElement: HTMLElement, state: State): ChessS
     const delta = (now - lastFrameTime) / 1000;
     lastFrameTime = now;
     board.rotation.y = THREE.MathUtils.damp(board.rotation.y, targetRotationY, 8, delta);
+    if (Math.abs(board.rotation.y - targetRotationY) < 0.0001) {
+      targetRotationY = currentOrientation === 'white' ? 0 : Math.PI;
+      board.rotation.y = targetRotationY;
+    }
 
     hoverController.update();
     controls.update();
