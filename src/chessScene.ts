@@ -69,12 +69,14 @@ export function createChessScene(htmlElement: HTMLElement, state: State): ChessS
   let pieceTemplates = new Map<string, THREE.Mesh>();
   let isDestroyed = false;
   let currentOrientation: Color | undefined;
+  let targetRotationY = 0;
+  let lastFrameTime = performance.now();
 
   function setOrientation(orientation: Color | undefined) {
     if (!orientation || orientation === currentOrientation) {
       return;
     }
-    board.rotation.y = orientation === 'white' ? 0 : Math.PI;
+    targetRotationY = orientation === 'white' ? 0 : Math.PI;
 
     currentOrientation = orientation;
   }
@@ -187,6 +189,11 @@ export function createChessScene(htmlElement: HTMLElement, state: State): ChessS
   );
 
   const renderStep = () => {
+    const now = performance.now();
+    const delta = (now - lastFrameTime) / 1000;
+    lastFrameTime = now;
+    board.rotation.y = THREE.MathUtils.damp(board.rotation.y, targetRotationY, 8, delta);
+
     hoverController.update();
     controls.update();
     renderer.render(scene, camera);
