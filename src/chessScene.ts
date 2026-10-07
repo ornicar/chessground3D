@@ -76,8 +76,7 @@ export function createChessScene(htmlElement: HTMLElement, state: State): ChessS
     if (!orientation || orientation === currentOrientation) {
       return;
     }
-    targetRotationY =
-      orientation === 'white' ? 0 : Math.PI;
+    targetRotationY = orientation === 'white' ? 0 : Math.PI;
 
     currentOrientation = orientation;
   }

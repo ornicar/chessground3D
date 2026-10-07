@@ -2,7 +2,7 @@ import { Chessground as Chessground2D } from '@lichess-org/chessground';
 import { type Api } from '@lichess-org/chessground/api';
 import { type Config, configure } from '@lichess-org/chessground/config';
 import { defaults, type HeadlessState, type State } from '@lichess-org/chessground/state';
-import { type PiecesDiff } from '@lichess-org/chessground/types';
+import { type Drop, type Key, type Piece, type PiecesDiff } from '@lichess-org/chessground/types';
 import { opposite } from '@lichess-org/chessground/util';
 
 import { createChessScene } from './chessScene';
@@ -11,16 +11,6 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
   // temporary hack to allow a 2D view
   if (new URLSearchParams(window.location.search).get('2D')) {
     return Chessground2D(element, config);
-  }
-
-  // temporary logging of not implemented functions in 3D scene
-  function notImplemented(name: string): () => void;
-  function notImplemented<T>(name: string, returnValue: T): () => T;
-  function notImplemented<T>(name: string, returnValue?: T) {
-    return () => {
-      console.warn(`${name} is not implemented in this 3D scene.`);
-      return returnValue;
-    };
   }
 
   // Mimic chessground initialisation
@@ -51,15 +41,18 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
     state,
 
     set(config) {
+      console.log('Applying new configuration:', config);
       configure(state, config);
       scene.set(state, 'fen' in config);
     },
 
     getFen() {
+      console.log('Getting FEN from the scene.');
       return scene.getFen();
     },
 
     toggleOrientation() {
+      console.log('Toggling board orientation.');
       state.orientation = opposite(state.orientation);
       state.animation.current = state.draggable.current = state.selected = undefined;
       scene.selectSquare(null);
@@ -67,10 +60,12 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
     },
 
     move(orig, dest) {
+      console.log(`Moving piece from ${orig} to ${dest}.`);
       scene.move(orig, dest);
     },
 
     setPieces(pieces: PiecesDiff) {
+      console.log('Setting pieces:', pieces);
       for (const [key, piece] of pieces) {
         if (piece) {
           state.pieces.set(key, piece);
@@ -81,45 +76,69 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
       scene.set(state);
     },
 
-    selectSquare(key, _force): void {
+    selectSquare(key, force): void {
+      console.log(`Selecting square: ${key}, force: ${force}`);
       scene.selectSquare(key);
     },
 
-    newPiece: notImplemented('newPiece'),
+    newPiece(piece: Piece, key: Key): void {
+      console.log(`Adding new piece ${piece} at ${key}.`);
+    },
 
-    cancelMove: notImplemented('cancelMove'),
+    cancelMove(): void {
+      console.log('Cancelling move.');
+    },
 
-    stop: notImplemented('stop'),
+    stop(): void {
+      console.log('Stopping the scene.');
+    },
 
-    explode: notImplemented('explode'),
+    explode(keys: Key[]): void {
+      console.log('Exploding keys:', keys);
+    },
 
     setShapes(shapes) {
+      console.log('Setting user shapes:', shapes);
       scene.setUserShapes(shapes);
     },
 
     setAutoShapes(shapes) {
+      console.log('Setting system shapes:', shapes);
       scene.setSystemShapes(shapes);
     },
 
     dragNewPiece(piece, event, force) {
+      console.log(`Dragging new piece ${piece} with event:`, event, 'force:', force);
       cancelNewPieceDrag?.();
       cancelNewPieceDrag = scene.dragNewPiece(piece, event, force);
     },
 
-    redrawAll: notImplemented('redrawAll'),
+    redrawAll() {
+      console.log('Redrawing all elements.');
+      return () => {};
+    },
+
     playPremove() {
+      console.log('Playing premove.');
       return scene.playPremove();
     },
 
     cancelPremove() {
+      console.log('Cancelling premove.');
       scene.cancelPremove();
     },
 
-    playPredrop: notImplemented('playPredrop', false),
+    playPredrop(validate: (drop: Drop) => boolean): boolean {
+      console.log('Playing predrop with validation function:', validate);
+      return false; // default implementation
+    },
 
-    cancelPredrop: notImplemented('cancelPredrop'),
+    cancelPredrop() {
+      console.log('Cancelling predrop.');
+    },
 
     getKeyAtDomPos(pos) {
+      console.log('Getting key at DOM position:', pos);
       return scene.getKeyAtDomPos(pos);
     },
 
