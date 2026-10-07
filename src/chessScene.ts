@@ -40,10 +40,10 @@ export interface ChessScene {
   destroy(): void;
 }
 
-export function createChessScene(sceneRoot: HTMLElement, state: State): ChessScene {
+export function createChessScene(htmlElement: HTMLElement, state: State): ChessScene {
   const scene = createScene();
-  const camera = createCamera(sceneRoot);
-  const renderer = createRenderer(sceneRoot);
+  const camera = createCamera(htmlElement);
+  const renderer = createRenderer(htmlElement);
   const controls = createControls(camera, renderer.domElement);
   const pointerRaycaster = new THREE.Raycaster();
   const pointerNdc = new THREE.Vector2();
@@ -63,7 +63,7 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
   board.add(checkHighlight);
   board.add(systemShapesGroup);
   board.add(userShapesGroup);
-  const stopHandlingResize = handleResize(sceneRoot, camera, renderer);
+  const stopHandlingResize = handleResize(htmlElement, camera, renderer);
 
   let materialTemplates = new Map<string, THREE.Material>();
   let pieceTemplates = new Map<string, THREE.Mesh>();
@@ -83,7 +83,7 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
 
   // Set up piece hover and interaction
   const hoverController = createPieceHoverController(scene, camera, renderer.domElement, board);
-  sceneRoot.addEventListener('pointermove', hoverController.updateFromPointerEvent);
+  htmlElement.addEventListener('pointermove', hoverController.updateFromPointerEvent);
 
   // Set up interactions
   const interactionController = setupPieceInteraction({
@@ -232,7 +232,7 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
     },
 
     getKeyAtDomPos(pos) {
-      const rect = sceneRoot.getBoundingClientRect();
+      const rect = htmlElement.getBoundingClientRect();
       if (!rect.width || !rect.height) {
         return undefined;
       }
@@ -340,7 +340,7 @@ export function createChessScene(sceneRoot: HTMLElement, state: State): ChessSce
       stopHandlingResize();
       renderer.dispose();
       controls.dispose();
-      sceneRoot.removeEventListener('pointermove', hoverController.updateFromPointerEvent);
+      htmlElement.removeEventListener('pointermove', hoverController.updateFromPointerEvent);
     },
   };
 }

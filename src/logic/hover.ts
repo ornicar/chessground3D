@@ -45,7 +45,7 @@ export function createPieceHoverController(
   scene: THREE.Scene,
   camera: THREE.Camera,
   domElement: HTMLElement,
-  board: THREE.Object3D = scene,
+  board: THREE.Object3D,
 ): PieceHoverController {
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
