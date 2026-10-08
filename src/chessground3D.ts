@@ -13,6 +13,16 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
     return Chessground2D(element, config);
   }
 
+  // temporary hack to hide stuff pertaining to 2D
+  const style = document.createElement('style');
+  style.textContent = `
+  .variant-kingOfTheHill cg-container::before,
+  .variant-racingKings cg-container::before {
+    display: none !important;
+  }
+`;
+  document.head.appendChild(style);
+
   // Mimic chessground initialisation
   const maybeState: HeadlessState = defaults();
   configure(maybeState, config || {});
