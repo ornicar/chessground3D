@@ -27,3 +27,15 @@ becomes
 ```
 from 'chessground3D';
 ```
+
+### Crazyhouse
+
+```
+from '@lichess-org/chessground/drag';
+```
+
+becomes
+
+```
+from 'chessground3D/drag';
+```

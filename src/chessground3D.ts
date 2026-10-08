@@ -6,6 +6,7 @@ import { type Drop, type Key, type Piece, type PiecesDiff } from '@lichess-org/c
 import { opposite } from '@lichess-org/chessground/util';
 
 import { createChessScene } from './chessScene';
+import { dragNewPiece, registerScene, unregisterScene } from './drag';
 
 export function Chessground(element: HTMLElement, config?: Config): Api {
   // temporary hack to allow a 2D view
@@ -45,7 +46,7 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
     }),
   };
 
-  let cancelNewPieceDrag: (() => void) | undefined;
+  registerScene(state, scene);
 
   return {
     state,
@@ -119,8 +120,7 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
 
     dragNewPiece(piece, event, force) {
       console.log(`Dragging new piece ${piece} with event:`, event, 'force:', force);
-      cancelNewPieceDrag?.();
-      cancelNewPieceDrag = scene.dragNewPiece(piece, event, force);
+      dragNewPiece(state, piece, event, force);
     },
 
     redrawAll() {
@@ -153,7 +153,7 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
     },
 
     destroy() {
-      cancelNewPieceDrag?.();
+      unregisterScene(state);
       scene.destroy();
     },
   };
