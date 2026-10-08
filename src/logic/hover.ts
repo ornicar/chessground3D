@@ -105,158 +105,168 @@ export function createPieceHoverController(
     material.color.copy(highlightColor);
   }
 
-  return {
-    setEnabled(nextEnabled: boolean) {
-      enabled = nextEnabled;
-      if (!enabled) {
-        if ((pinnedPiece && hovered === pinnedPiece) || (draggedPiece && hovered === draggedPiece)) {
-          squareHighlight.visible = false;
-        } else {
-          clearHoveredState();
-        }
+  function setEnabled(nextEnabled: boolean) {
+    enabled = nextEnabled;
+    if (!enabled) {
+      if ((pinnedPiece && hovered === pinnedPiece) || (draggedPiece && hovered === draggedPiece)) {
+        squareHighlight.visible = false;
+      } else {
+        clearHoveredState();
       }
-    },
-    setDraggedPiece(piece: THREE.Mesh | null) {
-      draggedPiece = piece;
+    }
+  }
+
+  function setDraggedPiece(piece: THREE.Mesh | null) {
+    draggedPiece = piece;
+    if (draggedPiece) {
+      highlightPiece(draggedPiece, 'drag');
+      return;
+    }
+
+    if (pinnedPiece) {
+      highlightPiece(pinnedPiece, 'pinned');
+      return;
+    }
+
+    clearHoveredState();
+  }
+
+  function setPinnedPiece(piece: THREE.Mesh | null) {
+    pinnedPiece = piece;
+    if (!pinnedPiece) {
       if (draggedPiece) {
         highlightPiece(draggedPiece, 'drag');
-        return;
-      }
-
-      if (pinnedPiece) {
-        highlightPiece(pinnedPiece, 'pinned');
         return;
       }
 
       clearHoveredState();
-    },
-    setPinnedPiece(piece: THREE.Mesh | null) {
-      pinnedPiece = piece;
-      if (!pinnedPiece) {
-        if (draggedPiece) {
-          highlightPiece(draggedPiece, 'drag');
-          return;
-        }
+      return;
+    }
 
-        clearHoveredState();
-        return;
+    highlightPiece(pinnedPiece, 'pinned');
+  }
+
+  function setIgnoredPiece(piece: THREE.Mesh | null) {
+    ignoredPiece = piece;
+  }
+
+  function setPieceHighlightFilter(filter: (piece: THREE.Mesh) => boolean) {
+    pieceHighlightFilter = filter;
+    if (hovered && !pieceHighlightFilter(hovered)) {
+      clearHoveredState();
+    }
+  }
+
+  function updateFromPointerEvent(event: PointerEvent) {
+    const rect = domElement.getBoundingClientRect();
+    mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+    hasPointerPosition = true;
+  }
+
+  function update() {
+    if (!enabled) {
+      return;
+    }
+
+    // Avoid highlighting a square at startup before any pointer input exists.
+    if (!hasPointerPosition) {
+      clearHoveredState();
+      return;
+    }
+
+    if (pinnedPiece && !pinnedPiece.parent) {
+      pinnedPiece = null;
+      clearHoveredState();
+    }
+
+    if (draggedPiece && !draggedPiece.parent) {
+      draggedPiece = null;
+      clearHoveredState();
+    }
+
+    if (draggedPiece) {
+      const squareX = Math.round(draggedPiece.position.x + 3.5) - 3.5;
+      const squareZ = Math.round(draggedPiece.position.z + 3.5) - 3.5;
+      if (Math.abs(squareX) <= 4 && Math.abs(squareZ) <= 4) {
+        squareHighlight.position.x = squareX;
+        squareHighlight.position.z = squareZ;
+        squareHighlight.visible = true;
+      } else {
+        squareHighlight.visible = false;
       }
 
-      highlightPiece(pinnedPiece, 'pinned');
-    },
-    setIgnoredPiece(piece: THREE.Mesh | null) {
-      ignoredPiece = piece;
-    },
-    setPieceHighlightFilter(filter: (piece: THREE.Mesh) => boolean) {
-      pieceHighlightFilter = filter;
-      if (hovered && !pieceHighlightFilter(hovered)) {
-        clearHoveredState();
+      highlightPiece(draggedPiece, 'drag');
+      return;
+    }
+
+    raycaster.setFromCamera(mouse, camera);
+    let targetPiece: THREE.Mesh | null = null;
+    let hasHighlightedSquare = false;
+
+    const hits = raycaster.intersectObjects(scene.children, true);
+
+    let hitPiece: THREE.Mesh | null = null;
+    for (const intersection of hits) {
+      const candidate = getPieceMeshFromObject(intersection.object);
+      if (candidate && ignoredPiece && candidate === ignoredPiece) {
+        continue;
       }
-    },
-    updateFromPointerEvent(event: PointerEvent) {
-      const rect = domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-      hasPointerPosition = true;
-    },
-    update() {
-      if (!enabled) {
-        return;
+      if (candidate && !pieceHighlightFilter(candidate)) {
+        continue;
       }
-
-      // Avoid highlighting a square at startup before any pointer input exists.
-      if (!hasPointerPosition) {
-        clearHoveredState();
-        return;
+      if (candidate) {
+        hitPiece = candidate;
+        break;
       }
+    }
 
-      if (pinnedPiece && !pinnedPiece.parent) {
-        pinnedPiece = null;
-        clearHoveredState();
+    if (hitPiece) {
+      squareHighlight.position.x = hitPiece.position.x;
+      squareHighlight.position.z = hitPiece.position.z;
+      squareHighlight.visible = true;
+      hasHighlightedSquare = true;
+      targetPiece = hitPiece;
+    } else {
+      const hasBoardIntersection = raycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
+      if (hasBoardIntersection) {
+        board.worldToLocal(boardPoint);
       }
-
-      if (draggedPiece && !draggedPiece.parent) {
-        draggedPiece = null;
-        clearHoveredState();
-      }
-
-      if (draggedPiece) {
-        const squareX = Math.round(draggedPiece.position.x + 3.5) - 3.5;
-        const squareZ = Math.round(draggedPiece.position.z + 3.5) - 3.5;
-        if (Math.abs(squareX) <= 4 && Math.abs(squareZ) <= 4) {
-          squareHighlight.position.x = squareX;
-          squareHighlight.position.z = squareZ;
-          squareHighlight.visible = true;
-        } else {
-          squareHighlight.visible = false;
-        }
-
-        highlightPiece(draggedPiece, 'drag');
-        return;
-      }
-
-      raycaster.setFromCamera(mouse, camera);
-      let targetPiece: THREE.Mesh | null = null;
-      let hasHighlightedSquare = false;
-
-      const hits = raycaster.intersectObjects(scene.children, true);
-
-      let hitPiece: THREE.Mesh | null = null;
-      for (const intersection of hits) {
-        const candidate = getPieceMeshFromObject(intersection.object);
-        if (candidate && ignoredPiece && candidate === ignoredPiece) {
-          continue;
-        }
-        if (candidate && !pieceHighlightFilter(candidate)) {
-          continue;
-        }
-        if (candidate) {
-          hitPiece = candidate;
-          break;
-        }
-      }
-
-      if (hitPiece) {
-        squareHighlight.position.x = hitPiece.position.x;
-        squareHighlight.position.z = hitPiece.position.z;
+      if (hasBoardIntersection && Math.abs(boardPoint.x) <= 4 && Math.abs(boardPoint.z) <= 4) {
+        squareHighlight.position.x = Math.round(boardPoint.x + 3.5) - 3.5;
+        squareHighlight.position.z = Math.round(boardPoint.z + 3.5) - 3.5;
         squareHighlight.visible = true;
         hasHighlightedSquare = true;
-        targetPiece = hitPiece;
+        const pieceAtSquare = getPieceAtSquare(scene, squareHighlight.position.x, squareHighlight.position.z);
+        targetPiece = pieceAtSquare && pieceHighlightFilter(pieceAtSquare) ? pieceAtSquare : null;
       } else {
-        const hasBoardIntersection = raycaster.ray.intersectPlane(boardPlane, boardPoint) !== null;
-        if (hasBoardIntersection) {
-          board.worldToLocal(boardPoint);
-        }
-        if (hasBoardIntersection && Math.abs(boardPoint.x) <= 4 && Math.abs(boardPoint.z) <= 4) {
-          squareHighlight.position.x = Math.round(boardPoint.x + 3.5) - 3.5;
-          squareHighlight.position.z = Math.round(boardPoint.z + 3.5) - 3.5;
-          squareHighlight.visible = true;
-          hasHighlightedSquare = true;
-          const pieceAtSquare = getPieceAtSquare(
-            scene,
-            squareHighlight.position.x,
-            squareHighlight.position.z,
-          );
-          targetPiece = pieceAtSquare && pieceHighlightFilter(pieceAtSquare) ? pieceAtSquare : null;
-        } else {
-          squareHighlight.visible = false;
-        }
+        squareHighlight.visible = false;
       }
+    }
 
-      if (pinnedPiece) {
-        highlightPiece(pinnedPiece, 'pinned');
-        return;
-      }
+    if (pinnedPiece) {
+      highlightPiece(pinnedPiece, 'pinned');
+      return;
+    }
 
-      if (hovered && hovered !== targetPiece) {
-        clearHoveredState();
-      }
+    if (hovered && hovered !== targetPiece) {
+      clearHoveredState();
+    }
 
-      if (!hasHighlightedSquare || !targetPiece || hovered === targetPiece) {
-        return;
-      }
+    if (!hasHighlightedSquare || !targetPiece || hovered === targetPiece) {
+      return;
+    }
 
-      highlightPiece(targetPiece, 'hover');
-    },
+    highlightPiece(targetPiece, 'hover');
+  }
+
+  return {
+    updateFromPointerEvent,
+    update,
+    setEnabled,
+    setDraggedPiece,
+    setPinnedPiece,
+    setIgnoredPiece,
+    setPieceHighlightFilter,
   };
 }
