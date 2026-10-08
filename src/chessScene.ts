@@ -12,8 +12,13 @@ import { setupPieceInteraction } from './logic/interaction.js';
 import { applyInteractionPolicy } from './logic/interactionPolicy.js';
 import { setupMoveAttemptAdapter } from './logic/moveAttemptAdapter.js';
 import { updateMeshesFromShapes } from './logic/shapes.js';
-import { coordinatesToSquare, pieceCodes } from './logic/util.js';
-import { createA1Marker, createCheckHighlightMarker, createH8Marker } from './objects/createMarkers.js';
+import { coordinatesToSquare, keyToCoordinates, pieceCodes } from './logic/util.js';
+import {
+  createA1Marker,
+  createCheckHighlightMarker,
+  createH8Marker,
+  createPremoveHighlightMarker,
+} from './objects/createMarkers.js';
 import { piecesToScene } from './objects/createPieces.js';
 import { createPieceTemplates } from './objects/createPieceTemplates.js';
 import { createCamera } from './scene/createCamera.js';
@@ -61,6 +66,8 @@ export function createChessScene(htmlElement: HTMLElement, state: State): ChessS
   board.add(a1Marker);
   board.add(h8Marker);
   board.add(checkHighlight);
+  const predropHighlight = createPremoveHighlightMarker(true);
+  board.add(predropHighlight);
   board.add(systemShapesGroup);
   board.add(userShapesGroup);
   const stopHandlingResize = handleResize(htmlElement, camera, renderer);
@@ -160,7 +167,17 @@ export function createChessScene(htmlElement: HTMLElement, state: State): ChessS
     });
   }
 
+  function updatePredropHighlight(s: State) {
+    const coords = s.predroppable.current ? keyToCoordinates(s.predroppable.current.key) : null;
+    predropHighlight.visible = !!coords;
+    if (coords) {
+      predropHighlight.position.x = coords.x;
+      predropHighlight.position.z = coords.z;
+    }
+  }
+
   function applyState(s: State, hasFen = true) {
+    updatePredropHighlight(s);
     interactionController.setLastMoveSquares(s.highlight.lastMove ? s.lastMove : undefined);
     if (hasFen) {
       piecesToScene(s.pieces, board, pieceTemplates, materialTemplates);
@@ -308,12 +325,33 @@ export function createChessScene(htmlElement: HTMLElement, state: State): ChessS
       const onEnd = (endEvent: Event) => {
         const dropPosition = eventPosition(endEvent as MouchEvent) ?? position;
         const key = dropPosition ? this.getKeyAtDomPos(dropPosition) : undefined;
-        if (key && (force || !state.pieces.has(key))) {
+        const canDropNow =
+          state.movable.color === 'both' ||
+          (state.movable.color === piece.color && state.turnColor === piece.color);
+        const destPiece = key ? state.pieces.get(key) : undefined;
+        if (key && canDropNow && (force || !destPiece)) {
           state.pieces.set(key, piece);
           state.events.dropNewPiece?.(piece, key);
           state.movable.events?.afterNewPiece?.(piece.role, key, { premove: false, predrop: false });
           this.set(state);
           state.events.change?.();
+        } else if (
+          key &&
+          !canDropNow &&
+          state.predroppable.enabled &&
+          state.movable.color === piece.color &&
+          state.turnColor !== piece.color &&
+          (!destPiece || destPiece.color !== piece.color) &&
+          (piece.role !== 'pawn' || (key[1] !== '1' && key[1] !== '8'))
+        ) {
+          interactionController.cancelQueuedPremove();
+          state.predroppable.current = { role: piece.role, key };
+          state.predroppable.events.set?.(piece.role, key);
+          updatePredropHighlight(state);
+        } else if (state.predroppable.current) {
+          state.predroppable.current = undefined;
+          state.predroppable.events.unset?.();
+          updatePredropHighlight(state);
         }
         cancel();
       };

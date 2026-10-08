@@ -140,11 +140,39 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
 
     playPredrop(validate: (drop: Drop) => boolean): boolean {
       console.log('Playing predrop with validation function:', validate);
-      return false; // default implementation
+      const drop = state.predroppable.current;
+      if (!drop) {
+        return false;
+      }
+
+      let success = false;
+      const color = state.movable.color;
+      if (validate(drop) && (color === 'white' || color === 'black') && !state.pieces.has(drop.key)) {
+        const piece: Piece = { role: drop.role, color };
+        state.events.dropNewPiece?.(piece, drop.key);
+        state.pieces.set(drop.key, piece);
+        state.lastMove = [drop.key];
+        state.check = undefined;
+        state.events.change?.();
+        state.movable.dests = undefined;
+        state.turnColor = opposite(state.turnColor);
+        state.movable.events?.afterNewPiece?.(drop.role, drop.key, { premove: false, predrop: true });
+        success = true;
+      }
+
+      state.predroppable.current = undefined;
+      state.predroppable.events.unset?.();
+      scene.set(state, success);
+      return success;
     },
 
     cancelPredrop() {
       console.log('Cancelling predrop.');
+      if (state.predroppable.current) {
+        state.predroppable.current = undefined;
+        state.predroppable.events.unset?.();
+        scene.set(state, false);
+      }
     },
 
     getKeyAtDomPos(pos) {
