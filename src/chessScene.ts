@@ -3,7 +3,7 @@ import { write as fenWrite } from '@lichess-org/chessground/fen';
 import { premove } from '@lichess-org/chessground/premove';
 import { type State } from '@lichess-org/chessground/state';
 import { type Color, type Key, type MouchEvent, type Piece } from '@lichess-org/chessground/types';
-import { eventPosition } from '@lichess-org/chessground/util';
+import { eventPosition, opposite } from '@lichess-org/chessground/util';
 import * as THREE from 'three';
 
 import { updateCheckHighlight } from './logic/checkHighlight.js';
@@ -108,6 +108,8 @@ export function createChessScene(htmlElement: HTMLElement, state: State): ChessS
       state.check = undefined;
     }
 
+    state.movable.dests = undefined;
+    state.turnColor = opposite(state.turnColor);
     state.events?.move?.(orig, dest, capturedPiece);
     state.movable?.events?.after?.(orig, dest, { premove: isPremove, captured: capturedPiece });
     state.events?.change?.();
