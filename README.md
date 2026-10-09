@@ -26,11 +26,10 @@ allowBuilds:
 commit_id has to match pnpm-lock.yaml
 
 ```yaml
-  chessground3D:
-    specifier: github:yafred/chessground3D
-    version: https://codeload.github.com/yafred/chessground3D/tar.gz/<commit_id>
+chessground3D:
+  specifier: github:yafred/chessground3D
+  version: https://codeload.github.com/yafred/chessground3D/tar.gz/<commit_id>
 ```
-
 
 ### Search and replace in \*.ts files
 
