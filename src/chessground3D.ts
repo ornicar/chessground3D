@@ -106,6 +106,14 @@ export function Chessground(element: HTMLElement, config?: Config): Api {
 
     explode(keys: Key[]): void {
       console.log('Exploding keys:', keys);
+      let changed = false;
+      for (const key of keys) {
+        changed = state.pieces.delete(key) || changed;
+      }
+      scene.set(state);
+      if (changed) {
+        state.events.change?.();
+      }
     },
 
     setShapes(shapes) {
