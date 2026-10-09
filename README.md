@@ -28,7 +28,7 @@ commit_id has to match pnpm-lock.yaml
 ```yaml
   chessground3D:
     specifier: github:yafred/chessground3D
-    version: https://codeload.github.com/yafred/chessground3D/tar.gz/5af43988721df7d381535ba2bb7e8aab3ce8e49e
+    version: https://codeload.github.com/yafred/chessground3D/tar.gz/<commit_id>
 ```
 
 
