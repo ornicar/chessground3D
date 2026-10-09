@@ -4,7 +4,7 @@
 
 ```json
   "devDependencies": {
-    "chessground3D": "workspace:../chessground3D",
+    "chessground3D": "github:yafred/chessground3D",
 ```
 
 ### ui/lib/package.json
