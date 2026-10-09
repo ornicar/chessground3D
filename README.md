@@ -16,6 +16,13 @@
     },
 ```
 
+### pnpm-workspace.yaml
+
+```yaml
+allowBuilds:
+  chessground3D@https://codeload.github.com/yafred/chessground3D/tar.gz/<commit_id>: true
+```
+
 ### Search and replace in \*.ts files
 
 ```
