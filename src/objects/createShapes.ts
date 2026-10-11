@@ -2,9 +2,9 @@ import * as THREE from 'three';
 
 const ARROW_HEIGHT = 0.02;
 const SHAFT_WIDTH = 0.12;
-const HEAD_WIDTH = 0.32;
-const HEAD_LENGTH = 0.35;
-const TIP_GAP = 0.35; // leave room near the destination square center
+const HEAD_WIDTH = 0.60;
+const HEAD_LENGTH = 0.50;
+const TIP_GAP = 0.2; // leave room near the destination square center
 
 export function createArrowMesh(
   origX: number,
