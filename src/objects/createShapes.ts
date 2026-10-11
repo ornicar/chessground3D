@@ -114,6 +114,7 @@ export function createCustomSvgMesh(x: number, z: number, svgHtml: string, size 
   const mesh = new THREE.Mesh(geometry, material);
   mesh.position.set(x, CUSTOM_SVG_HEIGHT, z);
   mesh.renderOrder = 13;
+  mesh.userData.keepUpright = true;
 
   // Render a 200x200 viewBox centered on the square [0..100] (spanning [-50..150]),
   // mapped onto a 2.0x2.0 plane so badges and drop shadows can overlap adjacent squares without clipping.

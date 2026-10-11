@@ -217,6 +217,15 @@ export function createChessScene(htmlElement: HTMLElement, state: State): ChessS
       board.rotation.y = targetRotationY;
     }
 
+    // Custom SVGs stay facing the camera (same as white orientation) while the board rotates.
+    for (const group of [systemShapesGroup, userShapesGroup]) {
+      for (const child of group.children) {
+        if (child.userData.keepUpright) {
+          child.rotation.y = -board.rotation.y;
+        }
+      }
+    }
+
     hoverController.update();
     controls.update();
     renderer.render(scene, camera);
