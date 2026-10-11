@@ -357,7 +357,7 @@ export function setupPieceInteraction({
       return false;
     }
 
-    scene.remove(occupyingPiece);
+    occupyingPiece.removeFromParent();
     movingPiece.position.set(targetX, movingPiece.position.y, targetZ);
     setLastMoveHighlights(fromSquareX, fromSquareZ, targetX, targetZ);
     if (triggerMoveCallback) {
