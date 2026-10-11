@@ -59,7 +59,7 @@ export function createArrowMesh(
   const material = new THREE.MeshBasicMaterial({
     color,
     opacity,
-    transparent: opacity < 1,
+    transparent: true,
     depthWrite: false,
     side: THREE.DoubleSide,
   });
@@ -79,7 +79,7 @@ export function createCircleMesh(x: number, z: number, color: string, opacity: n
   const material = new THREE.MeshBasicMaterial({
     color,
     opacity,
-    transparent: opacity < 1,
+    transparent: true,
     depthWrite: false,
     side: THREE.DoubleSide,
   });
