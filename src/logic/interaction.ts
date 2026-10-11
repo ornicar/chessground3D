@@ -502,6 +502,7 @@ export function setupPieceInteraction({
     interactionEnabled = enabled;
     if (!interactionEnabled) {
       if (dragState) {
+        restoreHiddenPiece();
         dragState.piece.position.copy(dragState.startPosition);
         dragState.piece.position.y = dragState.startPosition.y;
         hoverController.setDraggedPiece(null);
@@ -539,6 +540,7 @@ export function setupPieceInteraction({
   function setDraggable(enabled: boolean) {
     draggable = enabled;
     if (!draggable && dragState) {
+      restoreHiddenPiece();
       dragState.piece.position.copy(dragState.startPosition);
       hoverController.setDraggedPiece(null);
       hoverController.setIgnoredPiece(null);
@@ -701,6 +703,15 @@ export function setupPieceInteraction({
     return true;
   }
 
+  let hiddenPiece: THREE.Mesh | null = null;
+
+  function restoreHiddenPiece() {
+    if (hiddenPiece) {
+      hiddenPiece.visible = true;
+      hiddenPiece = null;
+    }
+  }
+
   function dragPieceToPointer(event: PointerEvent) {
     if (!dragState) {
       return;
@@ -715,12 +726,28 @@ export function setupPieceInteraction({
       !hasBoardIntersection ||
       !isWithinBoard(boardPoint.x + dragState.pointerOffsetX, boardPoint.z + dragState.pointerOffsetZ)
     ) {
+      restoreHiddenPiece();
       return;
     }
 
     dragState.piece.position.x = boardPoint.x + dragState.pointerOffsetX;
     dragState.piece.position.z = boardPoint.z + dragState.pointerOffsetZ;
     dragState.piece.position.y = dragState.startPosition.y + 0.2;
+
+    const hoveredPiece = getPieceAtSquare(
+      scene,
+      getSquareCoordinate(boardPoint.x + dragState.pointerOffsetX),
+      getSquareCoordinate(boardPoint.z + dragState.pointerOffsetZ),
+      dragState.piece,
+    );
+    const nextHidden = hoveredPiece && isOppositeColor(dragState.piece, hoveredPiece) ? hoveredPiece : null;
+    if (nextHidden !== hiddenPiece) {
+      restoreHiddenPiece();
+      if (nextHidden) {
+        nextHidden.visible = false;
+        hiddenPiece = nextHidden;
+      }
+    }
   }
 
   function finishDrag(event: PointerEvent) {
@@ -728,6 +755,7 @@ export function setupPieceInteraction({
       return;
     }
 
+    restoreHiddenPiece();
     const { piece, startPosition } = dragState;
 
     if (!dragState.hasMoved) {
