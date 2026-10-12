@@ -1,4 +1,4 @@
-## Updates in [Lila](https://github.com/lichess-org/lila) for local testing
+## Updates in [Lila](https://github.com/lichess-org/lila) 
 
 ### package.json
 
